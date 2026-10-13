@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kalkulator Validasi NTB</title>
+<meta name="description" content="Validasi Omzet, Output, Nilai Tambah dan Rasio NTB/Output per kategori usaha - Sensus Ekonomi 2026. Berjalan di browser, data tidak dikirim ke mana pun.">
+<style>
+  :root{
+    --bg:#FFF7EC; --card:#FFFFFF; --orange:#F28C28; --orange-d:#D9741A;
+    --text:#2B2B2B; --muted:#7A7A7A; --line:#F0DFC8; --sec:#FFF1DC;
+    --green:#2E9E4F; --green-bg:#E8F6EC; --red:#C62828; --red-bg:#FDECEC;
+    --amber:#9A6700; --amber-bg:#FFF4D6; --blue:#2F80C8; --blue-bg:#E8F2FB; --grey-bg:#F3F3F3;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);
+    font-family:"Segoe UI",system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.4}
+  header{background:var(--orange);color:#fff;padding:14px 16px 12px}
+  header h1{margin:0;font-size:clamp(16px,2.6vw,22px);letter-spacing:.2px}
+  header p{margin:4px 0 0;font-size:12.5px;color:#FFF1DD}
+  .layout{display:grid;gap:14px;padding:14px;max-width:1280px;margin:0 auto;grid-template-columns:minmax(0,1fr)}
+  @media(min-width:980px){.layout{grid-template-columns:480px minmax(0,1fr);align-items:start}}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:10px}
+  .pad{padding:14px}
+  h2{margin:0;font-size:17px}
+  .hint{color:var(--muted);font-size:12px;margin:2px 0 0}
+  .sec{background:var(--sec);color:var(--orange-d);font-weight:700;font-size:12.5px;padding:6px 9px;border-radius:6px;margin:14px 0 6px}
+  .row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:5px 0}
+  .row label{flex:1;font-size:13px}
+  .row.key label{color:var(--orange-d);font-weight:700}
+  .row input{width:170px;max-width:46%;text-align:right;padding:6px 8px;font:inherit;border:1px solid var(--line);
+    border-radius:6px;background:#FFFDF9}
+  select{width:100%;padding:8px;font:inherit;border:1px solid var(--line);border-radius:6px;background:#FFFDF9}
+  input:focus,select:focus{outline:2px solid var(--orange);outline-offset:0;border-color:var(--orange)}
+  .auto{display:flex;justify-content:space-between;margin:6px 0 0;font-size:13px;font-weight:700;color:var(--muted)}
+  .auto b{color:var(--text)}
+  .thr{font-size:12.5px;font-weight:700;color:var(--muted);margin-top:5px}
+  button{font:inherit;font-weight:700;border:0;border-radius:7px;padding:9px 14px;color:#fff;cursor:pointer}
+  button:disabled{opacity:.45;cursor:not-allowed}
+  .btn-red{background:var(--red);width:100%;margin-top:16px}
+  .btn-blue{background:var(--blue)} .btn-lblue{background:#6FA8DC} .btn-grey{background:#8D8D8D}
+  #banner{font-size:clamp(14px,2vw,17px);font-weight:700;padding:13px 16px;border-radius:10px;margin-bottom:12px}
+  .b-idle{background:var(--grey-bg);color:var(--muted)} .b-ok{background:var(--green-bg);color:var(--green)}
+  .b-bad{background:var(--red-bg);color:var(--red)} .b-warn{background:var(--amber-bg);color:var(--amber)}
+  .metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:4px;padding:6px 8px;margin-bottom:12px}
+  .metric{padding:8px}
+  .metric .t{font-size:12px;color:var(--muted)} .metric .v{font-size:clamp(15px,2vw,19px);font-weight:700;overflow-wrap:anywhere}
+  .checks h3{margin:0 0 4px;font-size:12px;color:var(--orange-d);letter-spacing:.4px}
+  .chk{display:flex;align-items:center;gap:8px;margin:3px 0;flex-wrap:wrap}
+  .chk .ic{width:20px;font-weight:700;text-align:center;color:var(--muted)}
+  .chk .d{margin-left:auto;font-size:12.5px;color:var(--muted)}
+  #msg{white-space:pre-line;font-size:12.5px;margin-top:8px;color:var(--muted)}
+  #msg.bad{color:var(--red)}
+  .saran{background:var(--blue-bg);border-color:#BBD7F0;margin:12px 0}
+  .saran h3{margin:0 0 6px;font-size:12px;color:var(--blue);letter-spacing:.3px}
+  #sNear{font-size:clamp(17px,2.4vw,22px);font-weight:700;color:var(--blue);margin-top:6px;overflow-wrap:anywhere}
+  #sNearD,#sMid{font-size:12.5px;margin-top:4px;white-space:pre-line}
+  .btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+  #foot{color:var(--muted);font-size:12.5px;margin-left:6px}
+  .bottom{display:flex;align-items:center;flex-wrap:wrap;gap:6px}
+  footer{max-width:1280px;margin:0 auto;padding:4px 16px 24px;color:var(--muted);font-size:12px}
+</style>
+</head>
+<body>
+<header>
+  <h1>KALKULATOR VALIDASI OMZET, OUTPUT, NILAI TAMBAH &amp; RASIO</h1>
+  <p>Sensus Ekonomi 2026 &bull; Output: Kategori G = r27A &minus; r26C, selain G = r27A &nbsp;|&nbsp;
+     Nilai Tambah = Output &minus; r26B &minus; r26D &nbsp;|&nbsp; Rasio = NTB / Output</p>
+</header>
+
+<main class="layout">
+  <!-- ============ INPUT ============ -->
+  <section class="card pad" aria-label="Input data usaha">
+    <h2>Input Data Usaha</h2>
+    <p class="hint">Kolom bertanda ● dipakai langsung dalam perhitungan indikator.</p>
+    <div id="form"></div>
+    <button class="btn-red" id="btnClear" type="button">⟲ Kosongkan Semua Isian</button>
+  </section>
+
+  <!-- ============ HASIL ============ -->
+  <section aria-label="Hasil validasi" aria-live="polite">
+    <div id="banner" class="b-idle"></div>
+
+    <div class="card metrics">
+      <div class="metric"><div class="t">Omzet (r27A)</div><div class="v" id="mOmzet">-</div></div>
+      <div class="metric"><div class="t" id="mOutputT">Output</div><div class="v" id="mOutput">-</div></div>
+      <div class="metric"><div class="t">Nilai Tambah</div><div class="v" id="mNtb">-</div></div>
+      <div class="metric"><div class="t">Rasio NTB/Output</div><div class="v" id="mRasio">-</div></div>
+      <div class="metric"><div class="t">Threshold (MIN – MAX)</div><div class="v" id="mThr">-</div></div>
+    </div>
+
+    <div class="card pad checks">
+      <h3>PENGECEKAN ATURAN</h3>
+      <div class="chk" id="chk-output"><span class="ic">•</span><span>Output positif (tidak minus / nol)</span><span class="d"></span></div>
+      <div class="chk" id="chk-ntb"><span class="ic">•</span><span>Nilai Tambah tidak negatif</span><span class="d"></span></div>
+      <div class="chk" id="chk-rasio"><span class="ic">•</span><span>Rasio NTB/Output masuk rentang threshold</span><span class="d"></span></div>
+      <div id="msg"></div>
+    </div>
+
+    <div class="card pad saran">
+      <h3>SARAN NILAI OMZET (r27A) — hanya omzet yang diubah, pengeluaran tetap</h3>
+      <div id="sRange"></div>
+      <div id="sNear"></div>
+      <div id="sNearD"></div>
+      <div id="sMid"></div>
+      <div class="btns">
+        <button class="btn-blue" id="btnNear" type="button" disabled>✔ Pakai Saran Omzet</button>
+        <button class="btn-lblue" id="btnMid" type="button" disabled>Pakai Nilai Tengah Rentang</button>
+      </div>
+    </div>
+
+    <div class="bottom">
+      <button class="btn-grey" id="btnCopy" type="button">📋 Salin Hasil</button>
+      <span id="foot"></span>
+    </div>
+  </section>
+</main>
+<footer>Semua perhitungan berjalan di browser Anda; tidak ada data yang dikirim ke server.</footer>
+
+<script>
+"use strict";
+/* =====================================================================
+   LOGIKA (port dari kalkulator_validasi_ntb.py)
+   ===================================================================== */
+const EPS = 1e-12;   // toleransi pembulatan floating point pada batas threshold
+
+// [huruf, uraian, MIN, MAX]  ->  null = tidak ada threshold
+const KATEGORI = [
+  ["A", "Pertanian, Kehutanan, dan Perikanan", 0.51, 0.94],
+  ["B", "Pertambangan dan Penggalian", 0.28, 0.81],
+  ["C", "Industri Pengolahan", 0.15, 0.61],
+  ["D", "Pengadaan Listrik, Gas, Uap/Air Panas dan Udara Dingin", 0.13, 0.68],
+  ["E", "Pengelolaan Air, Air Limbah, Sampah dan Daur Ulang", 0.29, 0.47],
+  ["F", "Konstruksi", 0.34, 0.44],
+  ["G", "Perdagangan Besar dan Eceran; Reparasi Kendaraan", 0.64, 0.78],
+  ["H", "Pengangkutan dan Pergudangan", 0.29, 0.64],
+  ["I", "Penyediaan Akomodasi dan Makan Minum", 0.36, 0.69],
+  ["J", "Informasi dan Komunikasi", 0.36, 0.73],
+  ["K", "Aktivitas Keuangan dan Asuransi", 0.50, 0.72],
+  ["L", "Real Estat", 0.46, 0.86],
+  ["M", "Aktivitas Profesional, Ilmiah dan Teknis", 0.50, 0.99],
+  ["N", "Penyewaan, Ketenagakerjaan, Agen Perjalanan & Penunjang Usaha", 0.44, 0.57],
+  ["O", "Administrasi Pemerintahan, Pertahanan, Jaminan Sosial", 0.54, 0.66],
+  ["P", "Pendidikan", null, null],
+  ["Q", "Aktivitas Kesehatan Manusia dan Aktivitas Sosial", 0.27, 0.82],
+  ["R", "Kesenian, Hiburan dan Rekreasi", 0.20, 0.60],
+  ["S", "Aktivitas Jasa Lainnya", 0.21, 0.57],
+  ["T", "Aktivitas Rumah Tangga sebagai Pemberi Kerja", 0.30, 0.69],
+  ["U", "Aktivitas Badan Internasional & Ekstra Internasional", null, null],
+];
+const THRESHOLD = {}, KAT_NAMA = {};
+KATEGORI.forEach(([k, n, mn, mx]) => { THRESHOLD[k] = [mn, mx]; KAT_NAMA[k] = n; });
+const katLabel = l => `${l} - ${KAT_NAMA[l]}`;
+
+const NUM_KEYS = ["a1","b1","a2","b2","r26a","r26b","r26c","r26d","r26e","r27a","r27b","r27d"];
+const INT_KEYS = new Set(["a1","b1","a2","b2"]);
+const LABELS = {
+  a1: "Pekerja laki-laki (a1)", b1: "Pekerja perempuan (b1)",
+  a2: "Pekerja dibayar (a2)", b2: "Pekerja tidak dibayar (b2)",
+  r26a: "26a Upah dan gaji", r26b: "26b Biaya produksi",
+  r26c: "26c Biaya pembelian barang yang terjual",
+  r26d: "26d Biaya operasional", r26e: "26e Biaya non-operasional",
+  r27a: "27a Nilai produksi/penjualan/pendapatan",
+  r27b: "27b Pendapatan lainnya", r27d: "27d Persentase pendapatan online",
+};
+
+/** Parse angka gaya Indonesia: 1.500.000 | 1500000 | 1.500.000,50 | Rp 2.000 */
+function parseNum(text) {
+  let s = String(text).trim().replace(/rp/gi, "").replace(/\s+/g, "");
+  if (s === "") return 0;
+  if (s.includes(",")) {
+    s = s.replace(/\./g, "").replace(",", ".");
+  } else if (s.includes(".")) {
+    const parts = s.split(".");
+    if (parts.slice(1).every(p => p.length === 3) && parts[0].length >= 1 && parts[0].length <= 3) {
+      s = s.replace(/\./g, "");            // titik = pemisah ribuan
+    }
+  }
+  if (!/^(\d+(\.\d+)?|\.\d+)$/.test(s)) throw new Error("tidak valid");
+  return Number(s);
+}
+
+function groupThousands(intStr) { return intStr.replace(/\B(?=(\d{3})+(?!\d))/g, "."); }
+function fmt(v) {
+  if (v === null || v === undefined || Number.isNaN(v)) return "-";
+  const neg = v < 0, a = Math.abs(v);
+  let s;
+  if (Math.abs(a - Math.round(a)) < 1e-9) s = groupThousands(String(Math.round(a)));
+  else { const [i, d] = a.toFixed(2).split("."); s = groupThousands(i) + "," + d; }
+  return (neg ? "-" : "") + s;
+}
+const fmtRp = v => (v === null || v === undefined) ? "-" : "Rp " + fmt(v);
+const fmtRatio = (v, nd = 4) => (v === null || v === undefined) ? "-" : v.toFixed(nd).replace(".", ",");
+
+/** Pengurang Output: r26C hanya dipakai untuk Kategori G; kategori lain = 0. */
+const pengurangOutput = r => (r.kat === "G" ? r.r26c : 0);
+
+/** Hitung indikator dan periksa aturan untuk satu set isian. */
+function evaluasi(r) {
+  const out = r.r27a - pengurangOutput(r);
+  const ntb = out - r.r26b - r.r26d;
+  const rasio = out > 0 ? ntb / out : null;
+  const c1 = r.a1 + r.b1, c2 = r.a2 + r.b2;
+  const kat = r.kat || "";
+  const [tmin, tmax] = THRESHOLD[kat] || [null, null];
+
+  const cek = {}, warns = [], notes = [];
+
+  // 1. Output
+  if (out > 0) cek.output = "pass";
+  else {
+    cek.output = "fail";
+    if (kat === "G")
+      warns.push(`Output ${out < 0 ? "MINUS" : "bernilai 0"} (${fmtRp(out)}): omzet r27A tidak lebih besar dari ` +
+                 `biaya pembelian barang terjual r26C (Output Kategori G = r27A − r26C).`);
+    else
+      warns.push(`Output bernilai 0 (${fmtRp(out)}): omzet/pendapatan r27A masih 0 (Output selain Kategori G = r27A).`);
+  }
+
+  // 2. Nilai tambah
+  if (ntb >= 0) cek.ntb = "pass";
+  else { cek.ntb = "fail"; warns.push(`Nilai Tambah NEGATIF (${fmtRp(ntb)}).`); }
+
+  // 3. Rasio
+  if (!kat) {
+    cek.rasio = "pending";
+    warns.push("Kategori usaha belum dipilih, threshold rasio belum bisa diperiksa.");
+  } else if (tmin === null) {
+    cek.rasio = "na";
+    notes.push(`Kategori ${kat} tidak memiliki threshold rasio (cek rasio dilewati).`);
+  } else if (rasio === null) {
+    cek.rasio = "fail";
+    warns.push("Rasio tidak dapat dihitung karena Output ≤ 0.");
+  } else if (rasio < tmin - EPS) {
+    cek.rasio = "fail";
+    warns.push(`Rasio ${fmtRatio(rasio)} DI BAWAH batas minimum ${fmtRatio(tmin, 2)}.`);
+  } else if (rasio > tmax + EPS) {
+    cek.rasio = "fail";
+    warns.push(`Rasio ${fmtRatio(rasio)} DI ATAS batas maksimum ${fmtRatio(tmax, 2)}.`);
+  } else cek.rasio = "pass";
+
+  if (kat && kat !== "G" && r.r26c > 0)
+    notes.push("Catatan: r26C tidak dipakai menghitung Output karena kategori selain G (Output = r27A).");
+  if (c1 !== c2)
+    notes.push(`Catatan: total pekerja c1 (a1+b1) = ${fmt(c1)} berbeda dengan c2 (a2+b2) = ${fmt(c2)}.`);
+
+  const valid = Object.values(cek).every(v => v === "pass" || v === "na");
+  return { output: out, ntb, rasio, c1, c2,
+           f26: r.r26a + r.r26b + r.r26c + r.r26d + r.r26e,
+           c27: r.r27a + r.r27b, tmin, tmax, cek, warns, notes, valid };
+}
+
+// pembulatan "setengah ke genap" seperti round() Python
+function roundHalfEven(x) {
+  const f = Math.floor(x), d = x - f;
+  if (d < 0.5) return f;
+  if (d > 0.5) return f + 1;
+  return f % 2 === 0 ? f : f + 1;
+}
+
+/** Saran omzet (r27A) agar Output > 0, NTB >= 0 dan rasio dalam threshold. */
+function saranOmzet(r) {
+  const kat = r.kat || "";
+  if (!kat) return { state: "nokat", reason: "Pilih kategori usaha untuk mendapatkan saran." };
+
+  const c = pengurangOutput(r);
+  const K = r.r26b + r.r26d;
+  const [tmin, tmax] = THRESHOLD[kat];
+  const okWith = omzet => evaluasi({ ...r, r27a: omzet }).valid;
+
+  let outLo, outHi;
+  if (tmin === null) {                     // kategori P / U : cukup NTB >= 0 & Output > 0
+    outLo = K > 0 ? Math.ceil(K) : 1;
+    outHi = null;
+  } else {
+    if (K <= 0)
+      return { state: "infeasible",
+               reason: "Biaya produksi (r26B) + biaya operasional (r26D) = 0, sehingga rasio selalu 1,0000 dan " +
+                       `melebihi batas maksimum ${fmtRatio(tmax, 2)}. Tidak dapat diperbaiki hanya dengan mengubah omzet.` };
+    outLo = Math.ceil(K / (1 - tmin) - 1e-6);
+    outHi = Math.floor(K / (1 - tmax) + 1e-6);
+  }
+
+  let lo = c + outLo;
+  let hi = outHi === null ? null : c + outHi;
+
+  // koreksi pembulatan di batas
+  for (let i = 0; i < 5; i++) { if (okWith(lo)) break; lo += 1; }
+  for (let i = 0; i < 5; i++) { if (lo - 1 > c && okWith(lo - 1)) lo -= 1; else break; }
+  if (hi !== null) {
+    for (let i = 0; i < 5; i++) { if (okWith(hi)) break; hi -= 1; }
+    for (let i = 0; i < 5; i++) { if (okWith(hi + 1)) hi += 1; else break; }
+    if (hi < lo || !okWith(hi))
+      return { state: "infeasible",
+               reason: "Tidak ada nilai omzet bulat yang memenuhi seluruh aturan dengan pengeluaran saat ini." };
+  }
+
+  const cur = r.r27a;
+  let near;
+  if (cur < lo) near = lo;
+  else if (hi !== null && cur > hi) near = hi;
+  else near = cur;
+
+  let mid = null;
+  if (hi !== null) {
+    mid = roundHalfEven((lo + hi) / 2);
+    if (!okWith(mid)) mid = null;
+  }
+  return { state: "ok", lo, hi, near, mid };
+}
+
+// ==== UI ====
+/* =====================================================================
+   ANTARMUKA
+   ===================================================================== */
+const $ = id => document.getElementById(id);
+const inputs = {};      // key -> <input>
+const order = [];       // urutan fokus (Enter)
+let state = { saran: null, ev: null, rec: null };
+
+function buildForm() {
+  const root = $("form");
+  const addSec = t => { const d = document.createElement("div"); d.className = "sec"; d.textContent = t; root.appendChild(d); };
+  const addRow = (key, label, keyField) => {
+    const row = document.createElement("div");
+    row.className = "row" + (keyField ? " key" : "");
+    const lab = document.createElement("label");
+    lab.htmlFor = "in-" + key;
+    lab.textContent = (keyField ? "● " : "") + label;
+    const inp = document.createElement("input");
+    inp.id = "in-" + key; inp.type = "text"; inp.inputMode = "decimal";
+    inp.autocomplete = "off"; inp.placeholder = "0";
+    row.append(lab, inp); root.appendChild(row);
+    inputs[key] = inp; order.push(inp);
+  };
+  const addAuto = (id, label) => {
+    const d = document.createElement("div"); d.className = "auto";
+    d.innerHTML = `<span>${label}</span><b id="${id}">0</b>`; root.appendChild(d);
+  };
+
+  addSec("KATEGORI USAHA  (menentukan threshold)");
+  const sel = document.createElement("select");
+  sel.id = "in-kat"; sel.setAttribute("aria-label", "Kategori usaha");
+  sel.innerHTML = '<option value="">— Pilih kategori usaha —</option>' +
+    KATEGORI.map(([k]) => `<option value="${k}">${katLabel(k).replace(/&/g, "&amp;")}</option>`).join("");
+  root.appendChild(sel); inputs.kat = sel; order.push(sel);
+  const thr = document.createElement("div"); thr.className = "thr"; thr.id = "lblThr";
+  thr.textContent = "Threshold rasio: pilih kategori"; root.appendChild(thr);
+
+  addSec("24. PEKERJA (orang)");
+  addRow("a1", "a1. Pekerja laki-laki");
+  addRow("b1", "b1. Pekerja perempuan");
+  addRow("a2", "a2. Pekerja dibayar");
+  addRow("b2", "b2. Pekerja tidak dibayar");
+  addAuto("c1", "c1. Total (a1+b1)");
+  addAuto("c2", "c2. Total (a2+b2)");
+
+  addSec("26. RINCIAN PENGELUARAN 2025 (Rp)");
+  addRow("r26a", "a. Upah dan gaji, serta jaminan sosial pegawai [r26A]");
+  addRow("r26b", "b. Biaya produksi [r26B]", true);
+  addRow("r26c", "c. Biaya pembelian barang yang terjual (khusus perdagangan) [r26C] — dipakai untuk Output hanya jika Kategori G", true);
+  addRow("r26d", "d. Biaya operasional [r26D]", true);
+  addRow("r26e", "e. Biaya non-operasional");
+  addAuto("f26", "f. Total pengeluaran (a+b+c+d+e)");
+
+  addSec("27. NILAI PRODUKSI/PENJUALAN/PENDAPATAN 2025 (Rp)");
+  addRow("r27a", "a. Nilai produksi/penjualan/pendapatan barang & jasa [r27A = Omzet]", true);
+  addRow("r27b", "b. Pendapatan lainnya");
+  addAuto("c27", "c. Total (a+b)");
+  addRow("r27d", "d. Persentase pendapatan online (%)");
+}
+
+function getValues() {
+  const vals = {}, errors = [];
+  for (const key of NUM_KEYS) {
+    let v;
+    try {
+      v = parseNum(inputs[key].value);
+      if (INT_KEYS.has(key) && Math.abs(v - Math.round(v)) > 1e-9) throw new Error("int");
+      if (key === "r27d" && v > 100) throw new Error("pct");
+    } catch (e) {
+      const extra = INT_KEYS.has(key) ? " (bilangan bulat)" : key === "r27d" ? " (0 – 100)" : "";
+      errors.push(`'${LABELS[key]}' tidak valid — gunakan angka tidak negatif${extra}.`);
+      v = 0;
+    }
+    vals[key] = v;
+  }
+  vals.kat = inputs.kat.value;
+  return { vals, errors };
+}
+
+function formEmpty() {
+  return NUM_KEYS.every(k => inputs[k].value.trim() === "") && !inputs.kat.value;
+}
+
+function setBanner(level, text) {
+  const b = $("banner");
+  b.className = "b-" + level;
+  b.textContent = text;
+}
+
+function refresh() {
+  const { vals: rec, errors } = getValues();
+  const ev = evaluasi(rec);
+  state.rec = rec; state.ev = ev;
+  const idle = formEmpty();
+
+  // threshold label
+  if (rec.kat) {
+    const [mn, mx] = THRESHOLD[rec.kat];
+    $("lblThr").textContent = mn !== null
+      ? `Threshold rasio: ${fmtRatio(mn, 2)} – ${fmtRatio(mx, 2)}`
+      : "Kategori ini tidak memiliki threshold rasio";
+  } else $("lblThr").textContent = "Threshold rasio: pilih kategori";
+
+  // total otomatis
+  $("c1").textContent = fmt(ev.c1);
+  $("c2").textContent = fmt(ev.c2);
+  $("c2").style.color = ev.c1 !== ev.c2 ? "var(--red)" : "";
+  $("f26").textContent = fmt(ev.f26);
+  $("c27").textContent = fmt(ev.c27);
+
+  // metrik
+  $("mOutputT").textContent = rec.kat === "G" ? "Output (r27A − r26C) • Kategori G"
+                            : rec.kat ? "Output (= r27A) • selain G" : "Output";
+  $("mOmzet").textContent = fmt(rec.r27a);
+  $("mOutput").textContent = fmt(ev.output);
+  $("mOutput").style.color = ev.cek.output === "fail" ? "var(--red)" : "";
+  $("mNtb").textContent = fmt(ev.ntb);
+  $("mNtb").style.color = ev.cek.ntb === "fail" ? "var(--red)" : "var(--green)";
+  $("mRasio").textContent = fmtRatio(ev.rasio);
+  $("mRasio").style.color = ev.cek.rasio === "fail" ? "var(--red)" : "";
+  $("mThr").textContent = ev.tmin !== null ? `${fmtRatio(ev.tmin, 2)} – ${fmtRatio(ev.tmax, 2)}` : "-";
+
+  // daftar pengecekan
+  const sym = { pass: ["✔", "var(--green)"], fail: ["✖", "var(--red)"], na: ["ⓘ", "var(--muted)"], pending: ["?", "var(--amber)"] };
+  const det = {
+    output: fmtRp(ev.output),
+    ntb: fmtRp(ev.ntb),
+    rasio: (ev.tmin !== null && ev.rasio !== null)
+      ? `${fmtRatio(ev.rasio)}  (batas ${fmtRatio(ev.tmin, 2)} – ${fmtRatio(ev.tmax, 2)})`
+      : ev.cek.rasio === "na" ? "tanpa threshold" : "-",
+  };
+  for (const key of ["output", "ntb", "rasio"]) {
+    const row = $("chk-" + key), ic = row.children[0], d = row.children[2];
+    if (idle) { ic.textContent = "•"; ic.style.color = "var(--muted)"; d.textContent = ""; }
+    else {
+      const [s, col] = sym[ev.cek[key]];
+      ic.textContent = s; ic.style.color = col;
+      d.textContent = det[key]; d.style.color = s === "✖" ? "var(--red)" : "";
+    }
+  }
+
+  const lines = errors.map(e => "⛔ " + e);
+  if (!idle) { ev.warns.forEach(w => lines.push("⚠ " + w)); ev.notes.forEach(n => lines.push("ℹ " + n)); }
+  const msg = $("msg");
+  msg.textContent = lines.join("\n");
+  msg.className = ((errors.length || ev.warns.length) && !idle) ? "bad" : "";
+
+  // banner
+  if (idle) setBanner("idle", "Isi data usaha untuk memulai validasi.");
+  else if (errors.length) setBanner("warn", "⚠ Ada isian yang tidak valid — perbaiki terlebih dahulu");
+  else if (!rec.kat) setBanner("warn", "⚠ Pilih Kategori Usaha agar threshold dapat diperiksa");
+  else if (ev.valid) setBanner("ok", "✔ SESUAI ATURAN — Output, Nilai Tambah dan Rasio memenuhi syarat");
+  else {
+    const nBad = Object.values(ev.cek).filter(v => v === "fail").length;
+    setBanner("bad", `✖ TIDAK SESUAI ATURAN — ${nBad} pengecekan tidak terpenuhi`);
+  }
+
+  refreshSaran(rec, ev, idle || errors.length > 0);
+}
+
+function refreshSaran(rec, ev, idle) {
+  const sar = idle ? null : saranOmzet(rec);
+  state.saran = sar;
+  $("btnNear").disabled = true; $("btnMid").disabled = true;
+  $("sRange").textContent = ""; $("sNear").textContent = "";
+  $("sNearD").textContent = ""; $("sMid").textContent = "";
+  const near = $("sNear"); near.style.color = "";
+
+  if (sar === null) {
+    near.textContent = "—"; near.style.color = "var(--muted)";
+    $("sNearD").textContent = "Saran akan muncul setelah data diisi.";
+    return;
+  }
+  if (sar.state === "nokat" || sar.state === "infeasible") {
+    near.textContent = "Saran tidak tersedia"; near.style.color = "var(--muted)";
+    $("sNearD").textContent = sar.reason;
+    return;
+  }
+
+  const { lo, hi, mid } = sar, target = sar.near;
+  $("sRange").textContent = hi !== null
+    ? `Rentang omzet yang memenuhi aturan:  ${fmtRp(lo)}  s.d.  ${fmtRp(hi)}`
+    : `Omzet minimum agar Output positif dan NTB tidak negatif:  ${fmtRp(lo)}  (tanpa batas atas — kategori tanpa threshold)`;
+
+  const cur = rec.r27a;
+  if (ev.valid && target === cur) {
+    near.textContent = "Omzet saat ini sudah sesuai aturan"; near.style.color = "var(--green)";
+    $("sNearD").textContent = "Tidak perlu perubahan omzet.";
+  } else {
+    const e2 = evaluasi({ ...rec, r27a: target });
+    const diff = target - cur, arah = diff > 0 ? "naik" : "turun";
+    const pct = cur > 0 ? ` (${(Math.abs(diff) / cur * 100).toFixed(1).replace(".", ",")}%)` : "";
+    near.textContent = `Saran omzet: ${fmtRp(target)}`;
+    $("sNearD").textContent =
+      `Perubahan paling kecil dari omzet saat ini: ${arah} ${fmtRp(Math.abs(diff))}${pct}.\n` +
+      `Hasilnya → Output ${fmtRp(e2.output)}  |  NTB ${fmtRp(e2.ntb)}  |  Rasio ${fmtRatio(e2.rasio)}`;
+    $("btnNear").disabled = false;
+  }
+  if (mid !== null && mid !== target) {
+    const e3 = evaluasi({ ...rec, r27a: mid });
+    $("sMid").textContent = `Alternatif (tengah rentang): ${fmtRp(mid)}  →  NTB ${fmtRp(e3.ntb)}, Rasio ${fmtRatio(e3.rasio)}`;
+    $("btnMid").disabled = false;
+  }
+}
+
+function applyOmzet(which) {
+  const sar = state.saran;
+  if (!sar || sar.state !== "ok") return;
+  const val = which === "near" ? sar.near : sar.mid;
+  if (val === null || val === undefined) return;
+  inputs.r27a.value = String(Math.trunc(val));
+  refresh();
+  $("foot").textContent = `Omzet (r27A) diubah menjadi ${fmtRp(val)}.`;
+}
+
+function clearForm() {
+  order.forEach(el => { el.value = ""; });
+  refresh();
+  $("foot").textContent = "Semua isian dikosongkan — siap input baru.";
+  order[0].focus();
+}
+
+async function copyResult() {
+  const { ev, rec, saran: sar } = state;
+  if (!ev || formEmpty()) { $("foot").textContent = "Belum ada data untuk disalin."; return; }
+  const kat = rec.kat;
+  const lines = [
+    `Kategori: ${kat ? katLabel(kat) : "-"}`,
+    `Omzet (r27A): ${fmtRp(rec.r27a)}`,
+    `Output: ${fmtRp(ev.output)}`,
+    `Nilai Tambah: ${fmtRp(ev.ntb)}`,
+    `Rasio NTB/Output: ${fmtRatio(ev.rasio)}` +
+      (ev.tmin !== null ? ` (threshold ${fmtRatio(ev.tmin, 2)} – ${fmtRatio(ev.tmax, 2)})` : ""),
+    "Status: " + (ev.valid ? "SESUAI ATURAN" : "TIDAK SESUAI ATURAN"),
+    ...ev.warns.map(w => "- " + w),
+  ];
+  if (sar && sar.state === "ok" && !(ev.valid && sar.near === rec.r27a))
+    lines.push(`Saran omzet: ${fmtRp(sar.near)}` +
+      (sar.hi !== null ? ` (rentang valid ${fmtRp(sar.lo)} s.d. ${fmtRp(sar.hi)})` : ` (minimum ${fmtRp(sar.lo)})`));
+  const text = lines.join("\n");
+  try {
+    await navigator.clipboard.writeText(text);
+  } catch (e) {
+    const ta = document.createElement("textarea");
+    ta.value = text; document.body.appendChild(ta); ta.select();
+    try { document.execCommand("copy"); } catch (_) {}
+    ta.remove();
+  }
+  $("foot").textContent = "Hasil disalin ke clipboard.";
+}
+
+buildForm();
+order.forEach((el, i) => {
+  el.addEventListener("input", refresh);
+  el.addEventListener("change", refresh);
+  el.addEventListener("keydown", e => {
+    if (e.key === "Enter") { e.preventDefault(); order[(i + 1) % order.length].focus(); }
+  });
+});
+// rapikan format Rupiah saat kolom ditinggalkan (hanya kolom nominal)
+["r26a","r26b","r26c","r26d","r26e","r27a","r27b"].forEach(k => {
+  inputs[k].addEventListener("blur", () => {
+    const t = inputs[k].value.trim();
+    if (t === "") return;
+    try { inputs[k].value = fmt(parseNum(t)); } catch (_) { /* biarkan, error ditampilkan */ }
+    refresh();
+  });
+});
+$("btnClear").addEventListener("click", clearForm);
+$("btnNear").addEventListener("click", () => applyOmzet("near"));
+$("btnMid").addEventListener("click", () => applyOmzet("mid"));
+$("btnCopy").addEventListener("click", copyResult);
+refresh();
+order[0].focus();
+</script>
+</body>
+</html>
